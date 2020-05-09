@@ -45,6 +45,7 @@ const promptMode = () => {
       } else if (answers.PickMode === "Add Department") {
         addDepartment();
       } else if (answers.PickMode === "Add Role") {
+        addRole();
       } else if (answers.PickMode === "Add employee") {
       } else if (answers.PickMode === "Update Roles") {
       } else if (answers.PickMode === "Exit") {
@@ -100,6 +101,43 @@ const addDepartment = () => {
         function (err) {
           if (err) throw err;
           console.log("Succesfully added new department.");
+        }
+      );
+      promptMode();
+    });
+};
+
+const addRole = () => {
+  return inquirer
+    .prompt([
+      {
+        name: "addRole",
+        type: "input",
+        message: "What role would you like to add?",
+      },
+      {
+        name: "addRoleSalary",
+        type: "input",
+        message: "What is the roles salary?",
+      },
+      {
+        name: "departmentNumber",
+        type: "list",
+        message: "Which department would you like to add it too?",
+        choices: ["1.Management", "2.Development", "3.Sales", "4.Marketing"],
+      },
+    ])
+    .then(function (answer) {
+      connection.query(
+        "INSERT INTO role SET ?",
+        {
+          title: answer.addRole,
+          salary: answer.addRoleSalary || 0,
+          department_id: parseInt(answer.departmentNumber),
+        },
+        function (err) {
+          if (err) throw err;
+          console.log("New Role created successfully");
         }
       );
       promptMode();
