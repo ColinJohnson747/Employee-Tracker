@@ -43,6 +43,7 @@ const promptMode = () => {
       } else if (answers.PickMode === "View Roles") {
         viewRoles();
       } else if (answers.PickMode === "Add Department") {
+        addDepartment();
       } else if (answers.PickMode === "Add Role") {
       } else if (answers.PickMode === "Add employee") {
       } else if (answers.PickMode === "Update Roles") {
@@ -76,12 +77,31 @@ const viewRoles = () => {
 
 const viewEmployees = () => {
   const query = "SELECT * FROM employee";
-  connection.query(query, (err, res) => {
+  return connection.query(query, (err, res) => {
     if (err) throw err;
     res.forEach((r) => console.log(`|| Name: ${r.first_name} ${r.last_name}`));
+    promptMode();
   });
-
-  promptMode();
 };
 
-const addDepartment = () => {};
+const addDepartment = () => {
+  return inquirer
+    .prompt([
+      {
+        name: "addDepartment",
+        type: "input",
+        message: "What is the department you would like to add?",
+      },
+    ])
+    .then(function (answer) {
+      connection.query(
+        "INSERT INTO department SET ?",
+        { name: answer.addDepartment },
+        function (err) {
+          if (err) throw err;
+          console.log("Succesfully added new department.");
+        }
+      );
+      promptMode();
+    });
+};
