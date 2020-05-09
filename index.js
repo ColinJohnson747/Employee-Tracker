@@ -39,6 +39,7 @@ const promptMode = () => {
       if (answers.PickMode === "View Departments") {
         viewDepartments();
       } else if (answers.PickMode === "View Employees") {
+        viewEmployees();
       } else if (answers.PickMode === "View Roles") {
         viewRoles();
       } else if (answers.PickMode === "Add Department") {
@@ -72,3 +73,15 @@ const viewRoles = () => {
     promptMode();
   });
 };
+
+const viewEmployees = () => {
+  const query = "SELECT * FROM employee";
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    res.forEach((r) => console.log(`|| Name: ${r.first_name} ${r.last_name}`));
+  });
+
+  promptMode();
+};
+
+const addDepartment = () => {};
