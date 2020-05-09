@@ -47,6 +47,7 @@ const promptMode = () => {
       } else if (answers.PickMode === "Add Role") {
         addRole();
       } else if (answers.PickMode === "Add employee") {
+        addEmployee();
       } else if (answers.PickMode === "Update Roles") {
       } else if (answers.PickMode === "Exit") {
         process.exit();
@@ -143,3 +144,49 @@ const addRole = () => {
       promptMode();
     });
 };
+
+function addEmployee() {
+  connection.query("SELECT * FROM role", function (err, results) {
+    if (err) throw err;
+    return inquirer
+      .prompt([
+        {
+          name: "addEmployeeFirst",
+          type: "input",
+          message: "What is your new employees first name?",
+        },
+        {
+          name: "addEmployeeLast",
+          type: "input",
+          message: "What is your new employees last name?",
+        },
+        {
+          name: "employeeRole",
+          type: "list",
+          choices: function () {
+            let choiceArray = [];
+            for (let i = 0; i < results.length; i++) {
+              choiceArray.push(results[i].title);
+            }
+            return choiceArray;
+          },
+          message: "What role are they in?",
+        },
+      ])
+      .then(function (answer) {
+        connection.query(
+          "INSERT INTO employee SET ?",
+          {
+            first_name: answer.addEmployeeFirst,
+            last_name: answer.addEmployeeLast,
+            role_id: parseInt(answer.employeeRole),
+          },
+          function (err) {
+            if (err) throw err;
+            console.log("Added New Employee Successfully");
+          }
+        );
+        promptMode();
+      });
+  });
+}
