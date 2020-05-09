@@ -31,13 +31,16 @@ const promptMode = () => {
           "Add Role",
           "Add employee",
           "Update Roles",
+          "Exit",
         ],
       },
     ])
     .then(function (answers) {
       if (answers.PickMode === "View Departments") {
+        viewDepartments();
       } else if (answers.PickMode === "View Employees") {
       } else if (answers.PickMode === "View Roles") {
+        viewRoles();
       } else if (answers.PickMode === "Add Department") {
       } else if (answers.PickMode === "Add Role") {
       } else if (answers.PickMode === "Add employee") {
@@ -48,4 +51,24 @@ const promptMode = () => {
     });
 };
 
-const viewDepartments = () => {};
+const viewDepartments = () => {
+  const query = "SELECT name FROM department";
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    res.forEach((r) => console.log(`|| Department Name: ${r.name}||`));
+
+    promptMode();
+  });
+};
+
+const viewRoles = () => {
+  const query = "SELECT * FROM role";
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    res.forEach((r) =>
+      console.log(`|| Role Title: ${r.title} || Role Salary: ${r.salary}`)
+    );
+
+    promptMode();
+  });
+};
