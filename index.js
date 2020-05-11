@@ -1,6 +1,15 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-
+const employeeRoles = [
+  "Sales Exec",
+  "Lead Developer",
+  "Vice President",
+  "Marketing Lead",
+  "Junior Developer",
+  "Coffee Person",
+  "General Manager",
+  "Salesman",
+];
 let connection = mysql.createConnection({
   host: "localhost",
   // Your port; if not 3306
@@ -49,6 +58,7 @@ const promptMode = () => {
       } else if (answers.PickMode === "Add employee") {
         addEmployee();
       } else if (answers.PickMode === "Update Roles") {
+        updateEmployee();
       } else if (answers.PickMode === "Exit") {
         process.exit();
       }
@@ -146,47 +156,96 @@ const addRole = () => {
 };
 
 function addEmployee() {
-  connection.query("SELECT * FROM role", function (err, results) {
+  inquirer
+    .prompt([
+      {
+        name: "addEmployeeFirst",
+        type: "input",
+        message: "What is your new employees first name?",
+      },
+      {
+        name: "addEmployeeLast",
+        type: "input",
+        message: "What is your new employees last name?",
+      },
+      {
+        name: "employeeRole",
+        type: "rawlist",
+        choices: function () {
+          let choiceArray = employeeRoles;
+          return choiceArray;
+        },
+        message: "What role are they in?",
+      },
+    ])
+    .then(function (answer) {
+      connection.query(
+        "INSERT INTO employee SET ?",
+        {
+          first_name: answer.addEmployeeFirst,
+          last_name: answer.addEmployeeLast,
+        },
+
+        function (err) {
+          if (err) throw err;
+          console.log("Added New Employee Successfully");
+        }
+      );
+      promptMode();
+    });
+}
+
+const updateEmployee = () => {
+  connection.query("SELECT * FROM employee", function (err, r) {
     if (err) throw err;
+
     return inquirer
       .prompt([
         {
-          name: "addEmployeeFirst",
-          type: "input",
-          message: "What is your new employees first name?",
-        },
-        {
-          name: "addEmployeeLast",
-          type: "input",
-          message: "What is your new employees last name?",
-        },
-        {
-          name: "employeeRole",
+          name: "employee",
           type: "list",
           choices: function () {
-            let choiceArray = [];
-            for (let i = 0; i < results.length; i++) {
-              choiceArray.push(results[i].title);
+            var choiceArray = [];
+            for (var i = 0; i < r.length; i++) {
+              choiceArray.push(r[i].id + ". " + r[i].first_name);
             }
             return choiceArray;
           },
-          message: "What role are they in?",
+          message: "Which employee do you wish to update?",
         },
       ])
       .then(function (answer) {
-        connection.query(
-          "INSERT INTO employee SET ?",
-          {
-            first_name: answer.addEmployeeFirst,
-            last_name: answer.addEmployeeLast,
-            role_id: parseInt(answer.employeeRole),
-          },
-          function (err) {
-            if (err) throw err;
-            console.log("Added New Employee Successfully");
-          }
-        );
-        promptMode();
+        let chosenEmployee = parseInt(answer.employee);
+        connection.query("SELECT * FROM role", function (err, r) {
+          if (err) throw err;
+          return inquirer
+            .prompt([
+              {
+                name: "role",
+                type: "list",
+                choices: function () {
+                  var choiceArray = [];
+                  for (var i = 0; i < r.length; i++) {
+                    choiceArray.push(r[i].id + ". " + r[i].title);
+                  }
+                  return choiceArray;
+                },
+                message: "What would you like their new role to be?",
+              },
+            ])
+            .then(function (answer2) {
+              let newRole = parseInt(answer2.role);
+              connection.query(
+                "UPDATE employee SET ? WHERE ?",
+                [{ role_id: newRole }, { id: chosenEmployee }],
+                function (err) {
+                  if (err) throw err;
+                  console.log("Employee Updated!");
+                  promptMode();
+                }
+              );
+            });
+        });
       });
   });
-}
+};
