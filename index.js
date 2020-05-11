@@ -196,6 +196,8 @@ addEmployee = () => {
                 ],
                 function (err) {
                   if (err) throw err;
+                  console.log("New Employee Created!");
+                  promptMode();
                 }
               );
             });
