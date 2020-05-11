@@ -1,15 +1,6 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-const employeeRoles = [
-  "Sales Exec",
-  "Lead Developer",
-  "Vice President",
-  "Marketing Lead",
-  "Junior Developer",
-  "Coffee Person",
-  "General Manager",
-  "Salesman",
-];
+
 let connection = mysql.createConnection({
   host: "localhost",
   // Your port; if not 3306
@@ -155,45 +146,63 @@ const addRole = () => {
     });
 };
 
-function addEmployee() {
-  inquirer
-    .prompt([
-      {
-        name: "addEmployeeFirst",
-        type: "input",
-        message: "What is your new employees first name?",
-      },
-      {
-        name: "addEmployeeLast",
-        type: "input",
-        message: "What is your new employees last name?",
-      },
-      {
-        name: "employeeRole",
-        type: "rawlist",
-        choices: function () {
-          let choiceArray = employeeRoles;
-          return choiceArray;
-        },
-        message: "What role are they in?",
-      },
-    ])
-    .then(function (answer) {
-      connection.query(
-        "INSERT INTO employee SET ?",
+addEmployee = () => {
+  connection.query("SELECT * FROM role", function (err, r) {
+    if (err) throw err;
+    return inquirer
+      .prompt([
         {
-          first_name: answer.addEmployeeFirst,
-          last_name: answer.addEmployeeLast,
+          name: "roleChoice",
+          type: "rawlist",
+          choices: function () {
+            var choiceArray = [];
+            for (var i = 0; i < r.length; i++) {
+              choiceArray.push(r[i].id + ". " + r[i].title);
+            }
+            return choiceArray;
+          },
+          message: "What is the new employees role?",
         },
-
-        function (err) {
+      ])
+      .then(function (answer) {
+        let employeeRole = parseInt(answer.roleChoice);
+        connection.query("SELECT * FROM employee", function (err, r) {
           if (err) throw err;
-          console.log("Added New Employee Successfully");
-        }
-      );
-      promptMode();
-    });
-}
+          return inquirer
+            .prompt([
+              {
+                name: "employeeFirstName",
+                type: "input",
+                message: "What is their first name?",
+              },
+              {
+                name: "employeeLastName",
+                type: "input",
+                message: "What is their last name?",
+              },
+            ])
+            .then(function (answer2) {
+              let firstName = answer2.employeeFirstName;
+              let lastName = answer2.employeeLastName;
+              let employeeID = r.length + 1;
+              connection.query(
+                "INSERT INTO employee SET ?",
+                [
+                  {
+                    first_name: answer2.employeeFirstName,
+                    last_name: answer2.employeeLastName,
+                    role_id: employeeRole,
+                  },
+                ],
+                function (err) {
+                  if (err) throw err;
+                }
+              );
+            });
+        });
+      });
+  });
+};
 
 const updateEmployee = () => {
   connection.query("SELECT * FROM employee", function (err, r) {
