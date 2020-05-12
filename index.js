@@ -31,6 +31,7 @@ const promptMode = () => {
           "Add Role",
           "Add employee",
           "Update Roles",
+          "Update Managers",
           "Exit",
         ],
       },
@@ -50,6 +51,8 @@ const promptMode = () => {
         addEmployee();
       } else if (answers.PickMode === "Update Roles") {
         updateEmployee();
+      } else if (answers.PickMode === "Update Managers") {
+        updateManager();
       } else if (answers.PickMode === "Exit") {
         process.exit();
       }
@@ -146,7 +149,7 @@ const addRole = () => {
     });
 };
 
-addEmployee = () => {
+const addEmployee = () => {
   connection.query("SELECT * FROM role", function (err, r) {
     if (err) throw err;
     return inquirer
@@ -197,6 +200,66 @@ addEmployee = () => {
                 function (err) {
                   if (err) throw err;
                   console.log("New Employee Created!");
+                  promptMode();
+                }
+              );
+            });
+        });
+      });
+  });
+};
+
+const updateManager = () => {
+  connection.query("SELECT * FROM employee WHERE manager_id IS NULL", function (
+    err,
+    r
+  ) {
+    if (err) throw err;
+    return inquirer
+      .prompt([
+        {
+          name: "findEmployee",
+          type: "list",
+          choices: function () {
+            var choiceArray = [];
+            for (var i = 0; i < r.length; i++) {
+              choiceArray.push(
+                r[i].id + ". " + r[i].first_name + " " + r[i].last_name
+              );
+            }
+            return choiceArray;
+          },
+          message: "Please select from the employees without a manager.",
+        },
+      ])
+      .then((r) => {
+        let newEmployee = parseInt(r.findEmployee);
+        connection.query("SELECT * FROM employee", (err, r) => {
+          if (err) throw err;
+          return inquirer
+            .prompt([
+              {
+                name: "pickManager",
+                type: "list",
+                choices: function () {
+                  var choiceArray = [];
+                  for (var i = 0; i < r.length; i++) {
+                    choiceArray.push(
+                      r[i].id + ". " + r[i].first_name + " " + r[i].last_name
+                    );
+                  }
+                  return choiceArray;
+                },
+                message: "Please pick the employees new manager",
+              },
+            ])
+            .then((r2) => {
+              connection.query(
+                "UPDATE employee SET ? WHERE ?",
+                [{ manager_id: parseInt(r2.pickManager) }, { id: newEmployee }],
+                (err) => {
+                  if (err) throw err;
+                  console.log("Employee Updated!");
                   promptMode();
                 }
               );
